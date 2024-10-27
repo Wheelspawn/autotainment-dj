@@ -3,8 +3,10 @@ import cv2
 import os
 import time
 import base64
+import random
 
 from groq import Groq
+from playsound import playsound
 
 # Set up the output folder for saved frames
 output_folder = "VideoFrames"
@@ -23,7 +25,7 @@ def stream_video_to_images(video_source=0):
     stframe = st.empty()  # Placeholder for displaying frames in Streamlit
 
     client = Groq(    
-        api_key="",
+        api_key=os.environ.get("GROQ_API_KEY"),
     )
     
     while cap.isOpened():
@@ -68,12 +70,20 @@ def stream_video_to_images(video_source=0):
                 stream=False,
                 stop=None,
             )
+        
         print(completion)
+        
+        if 'dancing' in completion:
+            playsound('strobe.mp3')
+        elif 'sitting' in completion:
+            playsound('sunflower.mp3')
+        else:
+            pass
 
         cv2.imwrite(frame_path, frame)
         
         frame_count += 1
-        time.sleep(0.5)  # Adjust the delay to control frame rate
+        time.sleep(1.5)  # Adjust the delay to control frame rate
 
     cap.release()
 
