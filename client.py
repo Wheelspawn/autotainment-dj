@@ -73,7 +73,7 @@ def stream_video_to_images(video_source=0):
         cv2.imwrite(frame_path, frame)
         
         frame_count += 1
-        time.sleep(0.5)  # Adjust the delay to control frame rate
+        time.sleep(0.4)  # Adjust the delay to control frame rate
 
     cap.release()
 
