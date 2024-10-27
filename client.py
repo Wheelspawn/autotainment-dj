@@ -2,6 +2,8 @@ import streamlit as st
 import cv2
 import os
 import time
+import base64
+
 from groq import Groq
 
 # Set up the output folder for saved frames
@@ -9,10 +11,9 @@ output_folder = "VideoFrames"
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-# Groq client
-client = Groq(    
-    api_key=os.environ.get("GROQ_API_KEY"),
-)
+def encode_image(image_path):
+  with open(image_path, "rb") as image_file:
+    return base64.b64encode(image_file.read()).decode('utf-8')
 
 # Function to capture and save frames from the video stream
 def stream_video_to_images(video_source=0):
@@ -20,6 +21,10 @@ def stream_video_to_images(video_source=0):
     frame_count = 0
     
     stframe = st.empty()  # Placeholder for displaying frames in Streamlit
+
+    client = Groq(    
+        api_key="",
+    )
     
     while cap.isOpened():
         ret, frame = cap.read()
@@ -31,44 +36,43 @@ def stream_video_to_images(video_source=0):
         
         # Save the frame as an image in the output folder
         frame_path = os.path.join(output_folder, f"frame.jpg")
+
+        encode = encode_image(frame_path)
+
+        completion = client.chat.completions.create(
+                model="llama-3.2-90b-vision-preview",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": "If the people in this photo are standing or dancing, output 'dancing'. If they are sitting, output 'sitting'. If there are no people in the photo, or there is no photo, output 'empty'. You are outputting a single keyword. Do not output anything other than one of these three words. Do not output a sentence or paragraph. Do not output any punctuation."
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{encode}",
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "role": "assistant",
+                        "content": ""
+                    }
+                ],
+                temperature=1,
+                max_tokens=1024,
+                top_p=1,
+                stream=False,
+                stop=None,
+            )
+        print(completion)
+
         cv2.imwrite(frame_path, frame)
         
         frame_count += 1
-    
-        cap.release()
-
-        completion = client.chat.completions.create(
-            model="llama-3.2-90b-vision-preview",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "If the people in this photo are standing or dancing, output 'dancing'. If they are sitting, output 'sitting'. If there are no people in the photo, or there is no photo, output 'empty'. You are outputting a single keyword. Do not output anything other than one of these three words. Do not output a sentence or paragraph. Do not output any punctuation."
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{frame_path}",
-                            }
-                        }
-                    ]
-                },
-                {
-                    "role": "assistant",
-                    "content": ""
-                }
-            ],
-            temperature=1,
-            max_tokens=1024,
-            top_p=1,
-            stream=False,
-            stop=None,
-        )
-
-        print(completion.choices[0].message)
-            
         time.sleep(0.5)  # Adjust the delay to control frame rate
 
     cap.release()
