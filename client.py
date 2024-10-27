@@ -71,14 +71,14 @@ def stream_video_to_images(video_source=0):
                 stop=None,
             )
         
-        print(completion)
+        result = completion.choices[0].message.content.lower()
         
-        if 'dancing' in completion:
+        if 'dancing' in result:
             playsound('strobe.mp3')
-        elif 'sitting' in completion:
+        elif 'sitting' in result:
             playsound('sunflower.mp3')
         else:
-            pass
+            playsound('silence.mp3')
 
         cv2.imwrite(frame_path, frame)
         
