@@ -1,5 +1,6 @@
 import csv
 import time
+import cv2
 import os
 from groq import Groq
 
@@ -27,6 +28,17 @@ def main():
     while True:
         
         try:
+            
+            cap = cv2.VideoCapture(0)
+            
+            stframe = st.empty()  # Placeholder for displaying frames in Streamlit
+            
+            ret, frame = cap.read()
+            
+            # Display the frame in Streamlit
+            stframe.image(frame, channels="BGR", caption=f"Frame")
+            
+            cap.release()
     
             completion = client.chat.completions.create(
                 model="llama-3.2-90b-vision-preview",
@@ -41,7 +53,7 @@ def main():
                             {
                                 "type": "image_url",
                                 "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}",
+                                    "url": f"data:image/jpeg;base64,{frame}",
                                 }
                             }
                         ]
