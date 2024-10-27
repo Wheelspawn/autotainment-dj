@@ -73,7 +73,7 @@ def stream_video_to_images(video_source=0):
         cv2.imwrite(frame_path, frame)
         
         frame_count += 1
-        time.sleep(0.4)  # Adjust the delay to control frame rate
+        time.sleep(0.5)  # Adjust the delay to control frame rate
 
     cap.release()
 
@@ -82,7 +82,7 @@ st.title("Video Stream to Images")
 source_option = st.selectbox("Select Video Source", ["Webcam", "Video File"])
 
 if source_option == "Webcam":
-    stream_video_to_images(video_source=0)
+    stream_video_to_images(video_source=1)
 elif source_option == "Video File":
     video_file = st.file_uploader("Upload a video", type=["mp4", "avi", "mov"])
     if video_file is not None:
